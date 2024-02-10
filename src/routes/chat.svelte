@@ -1,8 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { createEventDispatcher } from 'svelte';
     import { chatTempalte, chatGenerate } from '$lib';
-    // import { DeepChat } from 'deep-chat';
 
     // Make sure to use onMount and render deep-chat on load
     onMount(async () => {
@@ -13,48 +11,37 @@
     let isLoaded = false;
     const introMessage =
         'Hi, my name is CuteChat. I am a gpt2-small fine-tuned with OASST2 on a NVIDIA Tesla T4 GPU.';
-    const initialMessages = [{ content: introMessage, role: 'assistant' }];
 
-    const dispatch = createEventDispatcher();
-    const dispatchNewMessage = (event) => {
-        dispatch('new-message', event);
-    };
-
-    let userMessage = '';
+    let userMessage;
 </script>
 
 <main>
-    <h1>Deep Chat</h1>
+    <h1>CuteChat Demo</h1>
     {#if isLoaded}
-        <!-- demo/textInput are examples of passing an object directly into a property -->
-        <!-- initialMessages is an example of passing an object from script into a property -->
         <deep-chat
-            {introMessage}
-            directConnection={{
-                huggingFace: {
-                    key: '',
-                    textGeneration: {
-                        model: 'shi-zheng-qxhs/gpt2_oasst2_curated',
-                        parameters: {
-                            max_new_tokens: 128,
-                            penalty_alpha: 0.6,
-                            top_k: 6,
-                            eos_token_id: 50256,
-                            pad_token_id: 50256,
-                        },
-                    },
+            demo="true"
+            introMessage={{
+                text: introMessage,
+            }}
+            request={{
+                handler: async (body, signals) => {
+                    try {
+                        const text = await chatGenerate(body.messages[0].text);
+                        signals.onResponse({ text: text[0].generated_text });
+                    } catch (e) {
+                        console.error(e);
+                        signals.onResponse({ text: 'Failed to process pipeline' });
+                    }
                 },
             }}
-            requestInterceptor={async (details) => {
-                details.body.inputs = await chatTempalte(details.body.inputs);
-                userMessage = details.body.inputs;
-                return details;
+            requestInterceptor={async (request) => {
+                userMessage = await chatTempalte(request.body.messages[0].text);
+                request.body.messages[0].text = userMessage.encoded_message;
+                return request;
             }}
-            responseInterceptor={async (details) => {
-                details[0].generated_text = details[0].generated_text
-                    .replace(userMessage, '')
-                    .trim();
-                return details;
+            responseInterceptor={async (response) => {
+                response.text = response.text.replace(userMessage.decoded_message, '');
+                return response;
             }}
         />
     {/if}
