@@ -8,12 +8,16 @@ This repo demos a simple template of using [`transformers.js`](https://huggingfa
 
     ```bash
     # create a python virtual environment
-    python venv .vent
-    # install required packages
-    pip3 install -r requirements.txt
-    # run the conversion script
+    python -m venv .venv
+    # activate .venv and install required packages
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    # run the conversion script - <modelid>
     python -m scripts.convert --quantize --model_id <modelid>
     ```
+
+    -   Push your custom model to hub and craft your huggingface repo files structures as follows, where your converted models are enclosed in `onnx` directory.
+        ![Example hub repo file structure]('.static/hub_repo.png')
 
     -   In this demo, we used a [custom gpt2-small (124MM parms)](https://huggingface.co/shi-zheng-qxhs/gpt2_oasst2_curated_onnx) fine-tuned on a conversational dataset, i.e., [`oasst2`](https://huggingface.co/datasets/sablo/oasst2_curated). This model was fine-tuned on a NVIDIA Tesla T4 GPU for 20 epochs.
 
