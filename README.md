@@ -23,6 +23,15 @@ This repo demos a simple template of using [`transformers.js`](https://huggingfa
 
     -   In this demo, we used a [custom gpt2-small (124MM parms)](https://huggingface.co/shi-zheng-qxhs/gpt2_oasst2_curated_onnx) fine-tuned on a conversational dataset, i.e., [`oasst2`](https://huggingface.co/datasets/sablo/oasst2_curated). This model was fine-tuned on a NVIDIA Tesla T4 GPU for 20 epochs.
 
+    ```javascript
+    // import model from HuggingFace Hub
+    import { pipeline } from '@xenova/transformers';
+    const pipe = await pipeline('text-generation', 'shi-zheng-qxhs/gpt2_oasst2_curated_onnx');
+    ```
+
+    You can either use `pipeline` or `model.generate` as if using `transformers` in python.
+    In [`index.js`](./src/lib/index.js), we used custom functions to process the user input and model generations, which can be modified based on your own need.
+
 ## download project
 
 ```bash
