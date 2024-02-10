@@ -35,7 +35,7 @@
             }}
             directConnection={{
                 huggingFace: {
-                    key: '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',
+                    key: '',
                     textGeneration: {
                         model: 'shi-zheng-qxhs/gpt2_oasst2_curated',
                         parameters: {
