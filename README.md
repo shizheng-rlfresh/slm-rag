@@ -32,6 +32,8 @@ This repo demos a simple template of using [`transformers.js`](https://huggingfa
     You can either use `pipeline` or `model.generate` as if using `transformers` in python.
     In [`index.js`](./src/lib/index.js), we used custom functions to process the user input and model generations, which can be modified based on your own need.
 
+    -   [`Deep Chat`](https://deepchat.dev/) allows using `handler` in `request` to use models imported directly from `transformers.js`. [`chat.svelte`](./src/routes/chat.svelte) shows an example of how we handled custom functions, as well as using `requestInterceptor` and `responseInterceptor` to process the (user) input and (model generated) output.
+
 ## download project
 
 ```bash
