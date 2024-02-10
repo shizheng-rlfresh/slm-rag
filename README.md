@@ -1,11 +1,11 @@
 This repo demos a simple template of using [`transformers.js`](https://huggingface.co/docs/transformers.js/en/index) and [Deep Chat](https://deepchat.dev/) to create a demo chat.
 
-# download project
+## download project
 
 ```bash
 # clone git repository
 git clone https://github.com/shizheng-rlfresh/slm-rag.git
-# install dependency
+# go to the directory and install dependency
 npm install
 ```
 
