@@ -2,6 +2,8 @@
 
 This repo demos a simple template of using [`transformers.js`](https://huggingface.co/docs/transformers.js/en/index) and [Deep Chat](https://deepchat.dev/) to create a demo chat.
 
+[Live Demo](https://svelte-chat-slm.netlify.app/)
+
 ## download project
 
 ```bash
