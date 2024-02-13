@@ -1,7 +1,7 @@
 import { pipeline } from '@xenova/transformers';
 
 export function preparePrompt(question, context) {
-    let prompt = question + '\n' + '\nPlease answer the question based on the following context:\n';
+    let prompt = question + '\nPlease answer the question based on the following context:\n';
     for (let i = 0; i < context.length; i++) {
         prompt += `${context[i].pageContent}\n`;
     }
@@ -11,28 +11,27 @@ export function preparePrompt(question, context) {
 export async function invoke(prompt, args) {
     const model = args?.modelName || 'Xenova/Qwen1.5-0.5B-Chat';
     const pipe = args?.pipeline || 'text-generation';
+    const maxNewToken = args?.max_new_tokens || 40;
+    const doSample = args?.do_sample || false;
+    console.log(model);
+    console.log(pipe);
 
-    const generator = await pipeline(pipe, model);
-
-    const processedPrompt = [
-        {
-            role: 'system',
-            content: 'Below is a dialogue between a human user and an very helpful AI assistant.',
-        },
+    const message = [
+        { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: prompt },
     ];
 
-    const text = generator.tokenizer.apply_chat_template(processedPrompt, {
+    const generator = await pipeline(pipe, model);
+
+    const text = generator.tokenizer.apply_chat_template(message, {
         tokenize: false,
         add_generation_prompt: true,
     });
 
-    console.log(text);
-
     const output = await generator(text, {
-        max_new_tokens: 128,
-        penalty_alpha: 0.6,
-        top_k: 6,
+        max_new_tokens: maxNewToken,
+        do_sample: doSample,
+        return_full_text: false,
     });
 
     return output;

@@ -7,7 +7,6 @@
         embedModel: 'Xenova/all-MiniLM-L6-v2',
         chunkSize: 1000,
         chunkOverlap: 200,
-        llmModel: 'gpt2',
         retrieverK: 3,
     };
 
@@ -24,7 +23,7 @@
     });
 
     const introMessage =
-        'Hi, my name is CuteChat. I am a gpt2-small fine-tuned with OASST2 on a NVIDIA Tesla T4 GPU.';
+        'Hi, my name is Qwen1.5. I am a 0.5B pretrained model available through Xenova/Qwen1.5-0.5B-Chat.';
 
     // Initializing user input variable
     let userMessage;
@@ -47,18 +46,30 @@
                     handler: async (body, signals) => {
                         try {
                             // Generating chat response
-                            const text = await retriever.invoke(body.messages[0].text);
-                            // console.log(text);
-                            let textContent = preparePrompt(body.messages[0].text, text);
-                            textContent = await invoke(textContent);
-                            console.log(textContent);
-                            signals.onResponse({ text: textContent });
+                            // const question = body.messages[0].text;
+                            // const context = await retriever.invoke(body.messages[0].text);
+                            // let prompt = preparePrompt(question, context);
+
+                            // console.log(body.messages[0].text);
+                            const result = await invoke(body.messages[0].text);
+                            console.log(result[0].generated_text);
+                            signals.onResponse({ text: result[0].generated_text });
                         } catch (e) {
                             // Handling errors
                             console.error(e);
                             signals.onResponse({ text: 'Failed to process pipeline' });
                         }
                     },
+                }}
+                requestInterceptor={async (request) => {
+                    const question = request.body.messages[0].text;
+                    const context = await retriever.invoke(question);
+                    request.body.messages[0].text = preparePrompt(question, context);
+                    return request;
+                }}
+                responseInterceptor={async (response) => {
+                    console.log(response.text);
+                    return response;
                 }}
             />
         </div>
