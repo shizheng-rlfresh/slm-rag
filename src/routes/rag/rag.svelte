@@ -1,19 +1,25 @@
 <script>
     import { onMount } from 'svelte';
-    import { pdfLoader, loadDocs, createVectorStore } from '$lib/loader';
+    import { createRetriever } from '$lib/loader';
 
-    const pdfUrl = './src/lib/assets/part_time_phd.pdf';
+    const args = {
+        pdfUrl: './src/lib/assets/part_time_phd.pdf',
+        embedModel: 'Xenova/all-MiniLM-L6-v2',
+        chunkSize: 1000,
+        chunkOverlap: 200,
+        llmModel: 'gpt2',
+    };
+
     let isLoaded = false;
     let loader;
-    let vectorStore;
+    let retriever;
 
     onMount(async () => {
         // Dynamically import deep-chat module
         await import('deep-chat');
+        retriever = await createRetriever(args);
         isLoaded = true;
-        loader = await pdfLoader(pdfUrl);
-        const docs = await loadDocs(loader);
-        vectorStore = await createVectorStore(docs);
+
         // console.log(vectorStore);
     });
 
@@ -42,10 +48,7 @@
                         try {
                             // Generating chat response
                             console.log(body.messages[0].text);
-                            const text = await vectorStore.similaritySearch(
-                                body.messages[0].text,
-                                1
-                            );
+                            const text = await retriever.invoke(body.messages[0].text);
                             signals.onResponse({ text: text[0].pageContent });
                         } catch (e) {
                             // Handling errors
@@ -56,6 +59,8 @@
                 }}
             />
         </div>
+    {:else}
+        <div class="m-6 text-2xl">Loading</div>
     {/if}
 </main>
 
