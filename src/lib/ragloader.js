@@ -66,7 +66,7 @@ export async function createRetriever(args) {
     const llmModel = args?.llmModel ? args.llmModel : chatModel;
     const chunkSize = args?.chunkSize ? args.chunkSize : 1000;
     const chunkOverlap = args?.chunkOverlap ? args.chunkOverlap : 200;
-    const retrieverK = args?.retriverK ? args.retriverK : 1;
+    const retrieverK = args?.retrieverK ? args.retrieverK : 1;
     const retrieverSearch = args?.retrieverSearch ? args.retrieverSearch : 'similarity';
 
     try {

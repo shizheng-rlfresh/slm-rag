@@ -1,6 +1,6 @@
 <script>
     import { onMount } from 'svelte';
-    import { createRetriever } from '$lib/loader';
+    import { createRetriever, preparePrompt, invoke } from '$lib';
 
     const args = {
         pdfUrl: './src/lib/assets/part_time_phd.pdf',
@@ -8,6 +8,7 @@
         chunkSize: 1000,
         chunkOverlap: 200,
         llmModel: 'gpt2',
+        retrieverK: 3,
     };
 
     let isLoaded = false;
@@ -17,10 +18,9 @@
     onMount(async () => {
         // Dynamically import deep-chat module
         await import('deep-chat');
+        // create retriever
         retriever = await createRetriever(args);
         isLoaded = true;
-
-        // console.log(vectorStore);
     });
 
     const introMessage =
@@ -47,9 +47,12 @@
                     handler: async (body, signals) => {
                         try {
                             // Generating chat response
-                            console.log(body.messages[0].text);
                             const text = await retriever.invoke(body.messages[0].text);
-                            signals.onResponse({ text: text[0].pageContent });
+                            // console.log(text);
+                            let textContent = preparePrompt(body.messages[0].text, text);
+                            textContent = await invoke(textContent);
+                            console.log(textContent);
+                            signals.onResponse({ text: textContent });
                         } catch (e) {
                             // Handling errors
                             console.error(e);
