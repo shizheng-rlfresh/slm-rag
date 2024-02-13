@@ -1,32 +1,69 @@
 <script>
-    // import { WebPDFLoader } from 'langchain/document_loaders/web/pdf';
-    // import { onMount } from 'svelte';
-
-    // let pdfjs;
-    // let pdfjsWorker;
-    // const pdfUrl = './src/lib/assets/part_time_phd.pdf';
-
-    // onMount(async () => {
-    //     pdfjs = await import('pdfjs-dist/legacy/build/pdf.min.mjs');
-    //     pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs');
-    //     pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-    // });
-
-    // export async function prepareDocs(pdfUrl) {
-    //     const pdfResponse = await fetch(pdfUrl);
-    //     const pdfBlob = await pdfResponse.blob();
-    //     const pdfLoader = new WebPDFLoader(pdfBlob);
-    //     const doc = await pdfLoader.load();
-
-    //     return pdfLoader;
-    // }
-    import { prepareDocs } from '$lib/vectorstore';
+    import { onMount } from 'svelte';
+    import { pdfLoader, loadDocs, createVectorStore } from '$lib/loader';
 
     const pdfUrl = './src/lib/assets/part_time_phd.pdf';
+    let isLoaded = false;
+    let loader;
+    let vectorStore;
 
-    prepareDocs(pdfUrl).then((docs) => {
-        console.log(docs);
+    onMount(async () => {
+        // Dynamically import deep-chat module
+        await import('deep-chat');
+        isLoaded = true;
+        loader = await pdfLoader(pdfUrl);
+        const docs = await loadDocs(loader);
+        vectorStore = await createVectorStore(docs);
+        // console.log(vectorStore);
     });
+
+    const introMessage =
+        'Hi, my name is CuteChat. I am a gpt2-small fine-tuned with OASST2 on a NVIDIA Tesla T4 GPU.';
+
+    // Initializing user input variable
+    let userMessage;
 </script>
 
-<p>RAG</p>
+<main class="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
+    <h1
+        class="mb-0 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-4xl font-bold text-transparent"
+    >
+        RAG Demo
+    </h1>
+    {#if isLoaded}
+        <div class="-mx-4 w-full max-w-md rounded-lg bg-white shadow-md">
+            <deep-chat
+                demo="true"
+                introMessage={{
+                    text: introMessage,
+                }}
+                request={{
+                    handler: async (body, signals) => {
+                        try {
+                            // Generating chat response
+                            console.log(body.messages[0].text);
+                            const text = await vectorStore.similaritySearch(
+                                body.messages[0].text,
+                                1
+                            );
+                            signals.onResponse({ text: text[0].pageContent });
+                        } catch (e) {
+                            // Handling errors
+                            console.error(e);
+                            signals.onResponse({ text: 'Failed to process pipeline' });
+                        }
+                    },
+                }}
+            />
+        </div>
+    {/if}
+</main>
+
+<style>
+    main {
+        font-family: sans-serif;
+        text-align: center;
+        justify-content: center;
+        display: grid;
+    }
+</style>
