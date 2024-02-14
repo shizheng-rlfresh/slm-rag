@@ -1,6 +1,10 @@
 <script>
     import Deepchat from './chat.svelte';
+    import Nav from '$lib/nav.svelte';
+
+    const name = 'PDF RAG Demo';
+    const url = '/rag';
 </script>
 
-<a href="/rag">RAG</a>
+<Nav {name} {url} />
 <Deepchat />
