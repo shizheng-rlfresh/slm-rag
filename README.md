@@ -1,6 +1,6 @@
 <div style="display: flex; margin-bottom: 20px;">
-    <img src="./static/cutechat_demo.png" alt="Image 1" style="width: 50%;">
-    <img src="./static/rag_demo.png" alt="Image 2" style="width: 50%;">
+    <img src="./static/cutechat_demo.png" alt="Image 1" style="width: 45%;">
+    <img src="./static/rag_demo.png" alt="Image 2" style="width: 45%;">
 </div>
 
 This repo demos a simple template of using [`transformers.js`](https://huggingface.co/docs/transformers.js/en/index), [LangChain.js](https://github.com/langchain-ai/langchainjs), and [Deep Chat](https://deepchat.dev/) to create a demo chat.
