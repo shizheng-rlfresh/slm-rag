@@ -1,9 +1,9 @@
 <div style="display: flex; margin-bottom: 20px;">
-    <img src="./static/cutechat_demo.png" alt="Image 1" style="width: 45%;">
-    <img src="./static/rag_demo.png" alt="Image 2" style="width: 45%;">
+    <img src="./static/cutechat_demo.png" alt="Image 1" style="width: 50%;">
+    <img src="./static/rag_demo.png" alt="Image 2" style="width: 50%;">
 </div>
 
-This repo demos a simple template of using [`transformers.js`](https://huggingface.co/docs/transformers.js/en/index), [LangChain.js](https://github.com/langchain-ai/langchainjs), and [Deep Chat](https://deepchat.dev/) to create a demo chat.
+This repo demos a simple template of using [`transformers.js`](https://huggingface.co/docs/transformers.js/en/index), [`LangChain.js`](https://github.com/langchain-ai/langchainjs), and [`Deep Chat`](https://deepchat.dev/) to create a demo chat.
 
 [Live Demo](https://svelte-chat-slm.netlify.app/)
 
@@ -64,8 +64,10 @@ npm run preview
     ```
 
     You can either use `pipeline` or `model.generate` as if using `transformers` in python.
-    In [`index.js`](./src/lib/index.js), we used custom functions to process the user input and model generations, which can be modified based on your own need.
+    In [`chat.js`](./src/lib/chat.js), we used custom functions to process the user input and model generations, which can be modified based on your own need.
 
-    -   [`Deep Chat`](https://deepchat.dev/) allows using `handler` in `request` to use models imported directly from `transformers.js`. [`chat.svelte`](./src/routes/chat.svelte) shows an example of how we handled custom functions, as well as using `requestInterceptor` and `responseInterceptor` to process the (user) input and (model generated) output.
+    -   `Deep Chat` allows using `handler` in `request` to use models imported directly from `transformers.js`. [`chat.svelte`](./src/routes/chat.svelte) shows an example of how we handled custom functions, as well as using `requestInterceptor` and `responseInterceptor` to process the (user) input and (model generated) output.
 
-    -   `langchain.js` does not support LLM through `transformers.js` as of now, but there are open issues on `custom LLMs`, etc. In this demo code, we chose to use `vectorStore` from `langchain.js` and `pipeline` from `transformers'js`.
+    `langchain.js` does not support LLM through `transformers.js` as of now _(and there are open issues on `custom LLMs`. It is not hard to implement a custom LLM)_. In this demo code, we chose to use `vectorStore` from `langchain.js` (see [`ragloader.js`](./src/lib/ragloader.js)) and `pipeline` from `transformers'js` (see [`ragchat.js`](./src/lib/ragchat.js)).
+
+    -   RAG component is implemented [`rag.svelte`](./src/routes/rag/rag.svelte) with `Deep Chat`.
