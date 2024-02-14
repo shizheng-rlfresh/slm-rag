@@ -25,7 +25,7 @@
     });
 
     const introMessage =
-        'Hi, my name is Qwen1.5. I am a 0.5B pretrained model available through Xenova/Qwen1.5-0.5B-Chat.';
+        'Hi, my name is Qwen1.5. I am a 0.5B pretrained model available through Xenova/Qwen1.5-0.5B-Chat.\nI could be a bit slow...';
 </script>
 
 <main class="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
