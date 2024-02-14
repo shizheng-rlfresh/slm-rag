@@ -14,6 +14,7 @@
     let isLoaded = false;
     let retriever;
     let chatFlag = false;
+    let placeHolder = 'Upload PDF file 👉';
 
     onMount(async () => {
         // Dynamically import deep-chat module
@@ -41,23 +42,31 @@
                 introMessage={{
                     text: introMessage,
                 }}
+                textInput={{
+                    placeholder: { text: placeHolder },
+                }}
                 mixedFiles={{ files: { maxNumberOfFiles: 1, acceptedFormats: '.pdf' } }}
                 request={{
                     handler: async (body, signals) => {
                         try {
                             if (body instanceof FormData) {
+                                if (body.get('error')) {
+                                    throw new Error(body.get('error'));
+                                }
                                 const file = body.get('files');
                                 signals.onResponse({
                                     text: `${file.name} was just uploaded! Retriever is ready!\n`,
                                 });
+                            } else if (body.messages[0].text instanceof Error) {
+                                throw new Error(body.messages[0].text);
                             } else {
                                 signals.onResponse({ text: body.messages[0].text });
                             }
-                            // signals.onResponse({ text: `${file.name} was just uploaded!\n` });
-                        } catch (e) {
+                        } catch (error) {
                             // Handling errors
-                            console.error(e);
-                            signals.onResponse({ text: 'Failed to process pipeline' });
+                            signals.onResponse({
+                                text: `Failed to process pipeline. ${error}`,
+                            });
                         }
                     },
                 }}
@@ -65,6 +74,11 @@
                     try {
                         if (request.body instanceof FormData) {
                             retriever = await createRetriever(request.body.get('files'), args);
+                            if (retriever instanceof Error) {
+                                request.body.append('error', retriever);
+                                return request;
+                            }
+                            placeHolder = 'Start asking question or upload new file 👉';
                             chatFlag = false;
                         } else if (request.body.messages && retriever) {
                             const context = await retriever.invoke(request.body.messages[0].text);
@@ -78,7 +92,9 @@
                                 "I don't have context to answer you yet. Please upload your PDF file.";
                         }
                     } catch (error) {
-                        throw new Error('Error request interceptor: ' + error);
+                        request.body.messages[0].text = new Error(
+                            'Error request interceptor: ' + error
+                        );
                     }
                     return request;
                 }}
@@ -86,11 +102,14 @@
                     try {
                         if (chatFlag) {
                             const result = await invoke(response.text, args);
-                            // console.log(result);
+                            if (result instanceof Error) {
+                                response.text = result;
+                                return response;
+                            }
                             response.text = result;
                         }
                     } catch (error) {
-                        throw new Error('Error response interceptor: ' + error);
+                        response.text = new Error('Error response interceptor: ' + error);
                     }
                     return response;
                 }}

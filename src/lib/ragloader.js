@@ -14,6 +14,7 @@ const embeddingModel = 'Xenova/all-MiniLM-L6-v2';
 // default LLM from transformers.js - used for coversation/text-generation
 
 async function loadPdf(pdf) {
+    let pdfLoader;
     try {
         let blob;
         if (!(pdf instanceof Blob) && typeof pdf === 'string') {
@@ -28,30 +29,34 @@ async function loadPdf(pdf) {
             throw new 'Invalid PDF URL or Blob'();
         }
 
-        const pdfLoader = new WebPDFLoader(blob, {
+        pdfLoader = new WebPDFLoader(blob, {
             pdfjs: () => Promise.resolve(pdfjs),
         });
-        return pdfLoader;
     } catch (error) {
-        throw new Error('Error creating PDF loader: ' + error);
+        pdfLoader = new Error('creating PDF loader: ' + error);
     }
+
+    return pdfLoader;
 }
 
 async function loadDocs(loader, args) {
+    let docs;
     try {
         const pages = await loader.load();
         const text_splitter = new RecursiveCharacterTextSplitter({
             chunkSize: args?.chunkSize ? args.chunkSize : 1000,
             chunkOverlap: args?.chunkOverlap ? args.chunkOverlap : 200,
         });
-        const docs = await text_splitter.splitDocuments(pages);
-        return docs;
+        docs = await text_splitter.splitDocuments(pages);
     } catch (error) {
-        throw new Error('Error loading or splitting document: ', error);
+        docs = new Error('loading or splitting document: ', error);
     }
+
+    return docs;
 }
 
 async function createVectorStore(docs, args) {
+    let vectorStore;
     try {
         if (docs.length === 0) {
             throw new Error('No documents were prepared, possibly due to an earlier error.');
@@ -59,28 +64,41 @@ async function createVectorStore(docs, args) {
         const model = new HuggingFaceTransformersEmbeddings({
             modelName: args?.modelName || embeddingModel,
         });
-        // const vectorStore = 1;
-        const vectorStore = await CloseVectorWeb.fromDocuments(docs, model);
-        return vectorStore;
+        vectorStore = await CloseVectorWeb.fromDocuments(docs, model);
     } catch (error) {
-        throw new Error('Error creating vector store: ', error);
+        vectorStore = new Error('creating vector store: ', error);
     }
+
+    return vectorStore;
 }
 
 export async function createRetriever(pdf, args) {
+    let retriever;
     const embedModel = args?.embedModel ? args.embedModel : embeddingModel;
     const chunkSize = args?.chunkSize ? args.chunkSize : 1000;
     const chunkOverlap = args?.chunkOverlap ? args.chunkOverlap : 200;
     const retrieverK = args?.retrieverK ? args.retrieverK : 1;
     const retrieverSearch = args?.retrieverSearch ? args.retrieverSearch : 'similarity';
-
     try {
         const loader = await loadPdf(pdf);
+        if (loader instanceof Error) {
+            console.log('loader: ', loader);
+            return loader;
+        }
         const docs = await loadDocs(loader, { chunkSize, chunkOverlap });
+        if (docs instanceof Error) {
+            console.log('docs: ', docs);
+            return docs;
+        }
         const vectorStore = await createVectorStore(docs, { modelName: embedModel });
-        const retriever = vectorStore.asRetriever({ k: retrieverK, searchType: retrieverSearch });
-        return retriever;
+        if (vectorStore instanceof Error) {
+            console.log('vectorStore: ', vectorStore);
+            return vectorStore;
+        }
+        retriever = vectorStore.asRetriever({ k: retrieverK, searchType: retrieverSearch });
     } catch (error) {
-        throw new Error('Error creating retriever: ', error);
+        retriever = new Error('creating retriever: ', error);
     }
+
+    return retriever;
 }
