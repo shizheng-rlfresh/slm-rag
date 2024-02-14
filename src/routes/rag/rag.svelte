@@ -42,9 +42,6 @@
                 introMessage={{
                     text: introMessage,
                 }}
-                textInput={{
-                    placeholder: { text: placeHolder },
-                }}
                 mixedFiles={{ files: { maxNumberOfFiles: 1, acceptedFormats: '.pdf' } }}
                 request={{
                     handler: async (body, signals) => {

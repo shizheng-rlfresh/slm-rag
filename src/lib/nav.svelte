@@ -31,12 +31,7 @@
                         <span class="font-bold">{name}</span>
                     </a>
                 </div>
-                <!-- primary nav -->
-                <!-- <div class="hidden items-center space-x-1 md:flex">
-                    <a href={url} class="px-3 py-5 text-gray-700 hover:text-gray-900">{name}</a>
-                </div> -->
             </div>
-            <!-- mobile button goes here -->
         </div>
     </div>
 </nav>
