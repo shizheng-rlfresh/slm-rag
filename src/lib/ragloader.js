@@ -12,15 +12,22 @@ pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 // default Embedding model from Transformers.js - used for vectorstore
 const embeddingModel = 'Xenova/all-MiniLM-L6-v2';
 // default LLM from transformers.js - used for coversation/text-generation
-const chatModel = 'gpt2';
 
-async function loadPdf(pdfUrl) {
+async function loadPdf(pdf) {
     try {
-        const response = await fetch(pdfUrl);
-        if (!response.ok) {
-            throw new Error('Fetching response was not successful');
+        let blob;
+        if (!(pdf instanceof Blob) && typeof pdf === 'string') {
+            const response = await fetch(pdf);
+            if (!response.ok) {
+                throw new Error('Fetching response was not successful');
+            }
+            blob = await response.blob();
+        } else if (pdf instanceof Blob) {
+            blob = pdf;
+        } else {
+            throw new 'Invalid PDF URL or Blob'();
         }
-        const blob = await response.blob();
+
         const pdfLoader = new WebPDFLoader(blob, {
             pdfjs: () => Promise.resolve(pdfjs),
         });
@@ -60,17 +67,15 @@ async function createVectorStore(docs, args) {
     }
 }
 
-export async function createRetriever(args) {
-    const pdfUrl = args?.pdfUrl ? args.pdfUrl : './src/lib/assets/part_time_phd.pdf';
+export async function createRetriever(pdf, args) {
     const embedModel = args?.embedModel ? args.embedModel : embeddingModel;
-    const llmModel = args?.llmModel ? args.llmModel : chatModel;
     const chunkSize = args?.chunkSize ? args.chunkSize : 1000;
     const chunkOverlap = args?.chunkOverlap ? args.chunkOverlap : 200;
     const retrieverK = args?.retrieverK ? args.retrieverK : 1;
     const retrieverSearch = args?.retrieverSearch ? args.retrieverSearch : 'similarity';
 
     try {
-        const loader = await loadPdf(pdfUrl);
+        const loader = await loadPdf(pdf);
         const docs = await loadDocs(loader, { chunkSize, chunkOverlap });
         const vectorStore = await createVectorStore(docs, { modelName: embedModel });
         const retriever = vectorStore.asRetriever({ k: retrieverK, searchType: retrieverSearch });

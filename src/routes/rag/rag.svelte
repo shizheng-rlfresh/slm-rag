@@ -3,38 +3,37 @@
     import { createRetriever, preparePrompt, invoke } from '$lib';
 
     const args = {
-        pdfUrl: './src/lib/assets/part_time_phd.pdf',
         embedModel: 'Xenova/all-MiniLM-L6-v2',
         chunkSize: 1000,
         chunkOverlap: 200,
         retrieverK: 3,
+        max_new_tokens: 128,
+        do_sample: false,
     };
 
     let isLoaded = false;
-    let loader;
     let retriever;
+    let chatFlag = false;
 
     onMount(async () => {
         // Dynamically import deep-chat module
         await import('deep-chat');
         // create retriever
-        retriever = await createRetriever(args);
+        // retriever = await createRetriever(args);
         isLoaded = true;
     });
 
     const introMessage =
         'Hi, my name is Qwen1.5. I am a 0.5B pretrained model available through Xenova/Qwen1.5-0.5B-Chat.';
-
-    // Initializing user input variable
-    let userMessage;
 </script>
 
 <main class="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
     <h1
         class="mb-0 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-4xl font-bold text-transparent"
     >
-        RAG Demo
+        PDF RAG Demo
     </h1>
+    <!-- <PdfViewer url={args.pdfUrl} /> -->
     {#if isLoaded}
         <div class="-mx-4 w-full max-w-md rounded-lg bg-white shadow-md">
             <deep-chat
@@ -42,18 +41,19 @@
                 introMessage={{
                     text: introMessage,
                 }}
+                mixedFiles={{ files: { maxNumberOfFiles: 1, acceptedFormats: '.pdf' } }}
                 request={{
                     handler: async (body, signals) => {
                         try {
-                            // Generating chat response
-                            // const question = body.messages[0].text;
-                            // const context = await retriever.invoke(body.messages[0].text);
-                            // let prompt = preparePrompt(question, context);
-
-                            // console.log(body.messages[0].text);
-                            const result = await invoke(body.messages[0].text);
-                            console.log(result[0].generated_text);
-                            signals.onResponse({ text: result[0].generated_text });
+                            if (body instanceof FormData) {
+                                const file = body.get('files');
+                                signals.onResponse({
+                                    text: `${file.name} was just uploaded! Retriever is ready!\n`,
+                                });
+                            } else {
+                                signals.onResponse({ text: body.messages[0].text });
+                            }
+                            // signals.onResponse({ text: `${file.name} was just uploaded!\n` });
                         } catch (e) {
                             // Handling errors
                             console.error(e);
@@ -62,13 +62,36 @@
                     },
                 }}
                 requestInterceptor={async (request) => {
-                    const question = request.body.messages[0].text;
-                    const context = await retriever.invoke(question);
-                    request.body.messages[0].text = preparePrompt(question, context);
+                    try {
+                        if (request.body instanceof FormData) {
+                            retriever = await createRetriever(request.body.get('files'), args);
+                            chatFlag = false;
+                        } else if (request.body.messages && retriever) {
+                            const context = await retriever.invoke(request.body.messages[0].text);
+                            request.body.messages[0].text = preparePrompt(
+                                request.body.messages[0].text,
+                                context
+                            );
+                            chatFlag = true;
+                        } else {
+                            request.body.messages[0].text =
+                                "I don't have context to answer you yet. Please upload your PDF file.";
+                        }
+                    } catch (error) {
+                        throw new Error('Error request interceptor: ' + error);
+                    }
                     return request;
                 }}
                 responseInterceptor={async (response) => {
-                    console.log(response.text);
+                    try {
+                        if (chatFlag) {
+                            const result = await invoke(response.text, args);
+                            // console.log(result);
+                            response.text = result;
+                        }
+                    } catch (error) {
+                        throw new Error('Error response interceptor: ' + error);
+                    }
                     return response;
                 }}
             />
